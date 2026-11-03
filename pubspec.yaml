@@ -65,6 +65,12 @@ flutter:
   assets:
     - resources/bg_auth.png
     - resources/google_logo.png
+    - resources/Icon 1.png
+    - resources/domba 1.png
+    - resources/kambing 1.png
+    - resources/sapi 1.png
+    - resources/kerbau 1.png
+    - resources/Iklan 4.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

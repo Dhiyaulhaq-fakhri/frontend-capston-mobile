@@ -213,43 +213,23 @@ class _RegisterPageState extends State<RegisterPage> {
                                 ),
                                 const SizedBox(height: 24),
 
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      flex: 3,
-                                      child: SizedBox(
-                                        height: 50,
-                                        child: ElevatedButton(
-                                          onPressed: () {},
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: primaryGreen,
-                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                          ),
-                                          child: const Text(
-                                            "Daftar Akun Sekarang",
-                                            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
-                                          ),
-                                        ),
-                                      ),
+                                // --- TOMBOL DAFTAR ---
+                                SizedBox(
+                                  width: double.infinity, // Memenuhi lebar layar
+                                  height: 50,
+                                  child: ElevatedButton(
+                                    onPressed: () {
+                                      // Logika Register di sini
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: primaryGreen,
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                     ),
-                                    const SizedBox(width: 8),
-                                    Container(
-                                      height: 50,
-                                      width: 50,
-                                      decoration: BoxDecoration(
-                                        color: primaryGreen,
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: Center(
-                                        child: Image.asset(
-                                          'resources/google_logo.png',
-                                          width: 24,
-                                          height: 24,
-                                          fit: BoxFit.contain,
-                                        ),
-                                      ),
+                                    child: const Text(
+                                      "Daftar Akun Sekarang",
+                                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
                                     ),
-                                  ],
+                                  ),
                                 ),
                                 const SizedBox(height: 24),
 
