@@ -105,9 +105,15 @@ class HomePage extends StatelessWidget {
                         ),
                       ),
                     ),
-                  ], // <-- PENUTUP COLUMN HEADER (Ini yang tadi hilang)
-                ), // <-- PENUTUP CONTAINER HEADER (Ini juga)
-              ), // <-- PENUTUP CHILDREN UTAMA (Column layar)
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              _buildCountdownCard(),
+
+              const SizedBox(height: 16),
 
               // --- SEARCH BAR ---
               Padding(
@@ -224,4 +230,92 @@ class HomePage extends StatelessWidget {
       ),
     );
   }
+
+    // --- WIDGET COUNTDOWN IDUL ADHA ---
+  Widget _buildCountdownCard() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: primaryGreen, // Hijau gelap sesuai desain
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        children: [
+          // Baris 1: Teks & Tombol Panah
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                "Idul Adha sudah semakin dekat!",
+                style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
+              ),
+              // Tombol Panah
+              Container(
+                padding: const EdgeInsets.all(4),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.arrow_forward_ios, color: primaryGreen, size: 12),
+              )
+            ],
+          ),
+          const SizedBox(height: 12),
+          
+          // Baris 2: Gambar Sapi & Kotak Angka
+          Row(
+            children: [
+              // Gambar Sapi (Kiri)
+              // Pastikan gambar sapi kamu transparan (PNG)
+              Image.asset(
+                'resources/coutdown 1.png', // <-- Sesuaikan path gambar kamu
+                width: 60,
+                height: 60,
+                fit: BoxFit.contain,
+              ),
+              const SizedBox(width: 12),
+              
+              // Kotak Angka (Kanan)
+              Expanded(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _buildTimeBox("193", "Hari"),
+                    _buildTimeBox("2", "Jam"),
+                    _buildTimeBox("59", "Menit"),
+                    _buildTimeBox("59", "Detik"),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Helper untuk Kotak Angka
+  Widget _buildTimeBox(String value, String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      decoration: BoxDecoration(
+        color: const Color(0xFF0F4C2C), // Hijau lebih gelap untuk kontras
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        children: [
+          Text(
+            value,
+            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+          ),
+          Text(
+            label,
+            style: const TextStyle(color: Colors.white70, fontSize: 10),
+          ),
+        ],
+      ),
+    );
+  }
+
 }

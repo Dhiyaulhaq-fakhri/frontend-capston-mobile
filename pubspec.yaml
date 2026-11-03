@@ -71,6 +71,7 @@ flutter:
     - resources/sapi 1.png
     - resources/kerbau 1.png
     - resources/Iklan 4.png
+    - resources/coutdown 1.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
