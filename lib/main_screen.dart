@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:frontend_capston/home_page.dart'; 
+import 'package:frontend_capston/edukasi_page.dart';
+import 'package:frontend_capston/home_page.dart';
 import 'package:frontend_capston/menu_page.dart';
+import 'package:frontend_capston/pesanan_page.dart'; 
 import 'package:frontend_capston/profil_page.dart';
 
 class MainScreen extends StatefulWidget {
@@ -25,6 +27,8 @@ class _MainScreenState extends State<MainScreen> {
     const Center(child: Text("Halaman Pesanan")), 
     const Center(child: Text("Halaman Akun")), 
     const ProfilPage(),
+    const PesananPage(),
+    const EdukasiPage(),
   ];
 
   void _onItemTapped(int index) {
@@ -65,6 +69,7 @@ class _MainScreenState extends State<MainScreen> {
                 _buildNavItem(Icons.receipt_long, "Pesanan", 3),
                 _buildNavItem(Icons.person_outline, "Akun", 4),
                 _buildNavItem(Icons.person, "Profil", 5),
+                _buildNavItem(Icons.school, "Edukasi", 6),
               ],
             ),
           ),
