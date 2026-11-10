@@ -38,6 +38,11 @@ dependencies:
   file_picker: ^13.3.3
   geolocator: ^14.0.1
   url_launcher: ^6.3.3
+  latlong2: ^0.10.1
+  flutter_map: ^8.3.2
+  pdf: ^3.13.1
+  printing: ^5.15.1
+  qr_flutter: ^4.1.0
 
 dev_dependencies:
   flutter_test:
@@ -54,6 +59,9 @@ dev_dependencies:
 # following page: https://dart.dev/tools/pub/pubspec
 
 # The following section is specific to Flutter packages.
+dependency_overrides:
+  path_provider_foundation: 2.5.1
+  
 flutter:
 
   # The following line ensures that the Material Icons font is
@@ -76,6 +84,7 @@ flutter:
     - resources/kerbau 1.png
     - resources/Iklan 4.jpg
     - resources/coutdown 1.png
+    - resources/sapi-limosin.jpg
     - resources/menu_banner.png
     - resources/Image_Shadow.png
 
@@ -104,3 +113,4 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+  
