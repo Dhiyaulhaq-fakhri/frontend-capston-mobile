@@ -1,6 +1,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:frontend_capston/edukasi_page.dart';
+import 'package:frontend_capston/kalender_page.dart';
+import 'package:frontend_capston/trendharga_page.dart';
 
 class MenuPage extends StatefulWidget {
   const MenuPage({super.key});
@@ -145,6 +147,9 @@ class _MenuPageState extends State<MenuPage> {
                 subtitle: 'Jadwal kurban & hari besar Islam',
                 popular: true,
                 longDescription: 'Cek tanggalan Hijriah harian yang akurat. Dilengkapi dengan penanda hari-hari besar Islam dan jadwal puasa sunnah (seperti Arafah dan Tarwiyah) sepanjang tahun.',
+                onButtonPressed: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => const KalenderPage()));
+                },
               ),
 
               const SizedBox(height: 14),
@@ -155,6 +160,9 @@ class _MenuPageState extends State<MenuPage> {
                 subtitle: 'Pantau grafik harga pasar hewan',
                 popular: true,
                 longDescription: 'Transparansi harga sapi dan kambing di ujung jari Anda. Lihat riwayat grafik harga terkini dan proyeksi kenaikan menjelang Idul Adha agar perencanaan dana lebih presisi.',
+                onButtonPressed: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => const TrendhargaPage()));
+                },
               ),
 
               const SizedBox(height: 14),
