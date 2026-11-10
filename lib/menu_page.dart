@@ -165,6 +165,7 @@ class _MenuPageState extends State<MenuPage> {
                 title: 'Kemitraan',
                 subtitle: 'Gabung jadi mitra peternak kami',
                 popular: true,
+                
               ),
 
               const SizedBox(height: 16),
