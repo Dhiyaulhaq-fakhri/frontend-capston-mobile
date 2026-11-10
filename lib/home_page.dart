@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend_capston/login_page.dart';
+import 'package:frontend_capston/trendharga_page.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -100,7 +101,7 @@ class HomePage extends StatelessWidget {
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(16),
                         child: Image.asset(
-                          'resources/Iklan 4.png', // Sesuaikan path
+                          'resources/Iklan 4.jpg', // Sesuaikan path
                           fit: BoxFit.fitWidth, // <-- Kunci utamanya di sini
                         ),
                       ),
@@ -141,14 +142,24 @@ class HomePage extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    _buildMenuIcon(Icons.trending_up, "Qurvest"),
-                    _buildMenuIcon(Icons.menu_book, "Edukasi"),
-                    _buildMenuIcon(Icons.calendar_month, "Kalender"),
-                    _buildMenuIcon(Icons.monetization_on, "Trendharga"),
+                    // Tambahkan context di awal
+                    _buildMenuIcon(context, Icons.trending_up, "Qurvest"),
+                    _buildMenuIcon(context, Icons.menu_book, "Edukasi"),
+                    _buildMenuIcon(context, Icons.calendar_month, "Kalender"),
+                    _buildMenuIcon(
+                      context, // <-- Tambahkan context di sini juga
+                      Icons.monetization_on, 
+                      "Trendharga",
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const TrendhargaPage()),
+                        );
+                      },
+                    ),
                   ],
                 ),
               ),
-              const SizedBox(height: 20),
 
               // --- LIST VERTIKAL (CARI KAMBING, DLL) ---
               Padding(
@@ -176,20 +187,28 @@ class HomePage extends StatelessWidget {
 
   // --- WIDGET CUSTOM ---
 
-  Widget _buildMenuIcon(IconData icon, String label) {
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: primaryGreen,
-            borderRadius: BorderRadius.circular(12),
+  Widget _buildMenuIcon(BuildContext context, IconData icon, String label, {VoidCallback? onTap}) {
+    return GestureDetector(
+      onTap: onTap ?? () {
+        // Sekarang 'context' sudah dikenali
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Fitur $label segera hadir!")),
+        );
+      },
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: primaryGreen,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: Colors.white, size: 24),
           ),
-          child: Icon(icon, color: Colors.white, size: 24),
-        ),
-        const SizedBox(height: 8),
-        Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.black87)),
-      ],
+          const SizedBox(height: 8),
+          Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.black87)),
+        ],
+      ),
     );
   }
 
