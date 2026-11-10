@@ -64,7 +64,7 @@ class _MainScreenState extends State<MainScreen> {
                 _buildNavItem(Icons.menu, "Menu", 1),
                 _buildNavItem(Icons.grid_view, "Katalog", 2),
                 _buildNavItem(Icons.receipt_long, "Pesanan", 3),
-                _buildNavItem(Icons.person, "Profil", 5),
+                _buildNavItem(Icons.person, "Profil", 4),
               ],
             ),
           ),

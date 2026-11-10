@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:frontend_capston/kemitraan_page.dart';
 import 'package:frontend_capston/login_page.dart';
+import 'package:frontend_capston/tabungan_page.dart';
 
 class ProfilPage extends StatefulWidget {
   const ProfilPage({super.key});
@@ -78,11 +80,36 @@ class _ProfilPageState extends State<ProfilPage> {
   }
 
   // Navigasi sementara ke halaman placeholder.
-  // Ganti dengan halaman asli, contoh: const NotifikasiPage()
+    // Navigasi cerdas
   void _navigateTo(String title) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => _PlaceholderPage(title: title)),
+    // 1. Cek menu Top Up / Dompet -> Halaman Tabungan
+    if (title == "Top Up" || title == "Dompet") {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const TabunganPage()),
+      );
+      return;
+    }
+
+    // 2. Cek menu Buka Kemitraan -> Halaman Kemitraan
+    if (title == "Buka Kemitraan") {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const KemitraanPage()),
+      );
+      return;
+    }
+
+    // 3. Menuju halaman lain yang sudah ada (tambahkan di sini nanti)
+    // if (title == "Wishlist") { ... }
+
+    // 4. Jika belum ada halamannya, tampilkan SnackBar
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("Fitur $title segera menyusul!"),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: darkGreen,
+      ),
     );
   }
 
@@ -387,18 +414,4 @@ class _MenuItem {
   final IconData icon;
   final String title;
   const _MenuItem(this.icon, this.title);
-}
-
-// Halaman sementara, hapus jika halaman asli sudah dibuat
-class _PlaceholderPage extends StatelessWidget {
-  final String title;
-  const _PlaceholderPage({required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(title)),
-      body: Center(child: Text("Halaman $title (belum dibuat)")),
-    );
-  }
 }

@@ -24,11 +24,10 @@ class _TrendhargaPageState extends State<TrendhargaPage> {
   // State Bobot (Slider)
   double _currentWeight = 380;
 
-  // Data Dummy untuk tiap hewan
-  final List<Map<String, dynamic>> _animalData = [
+    final List<Map<String, dynamic>> _animalData = [
     {
       'name': 'Sapi',
-      'icon': Icons.pets,
+      'icon': '🐄', // Emoji Sapi
       'unggulan': 'Simental / Limo',
       'hargaUnggulan': 'Rp 72rb – 78rb',
       'lokal': 'Bali / Madura',
@@ -39,7 +38,7 @@ class _TrendhargaPageState extends State<TrendhargaPage> {
     },
     {
       'name': 'Kambing',
-      'icon': Icons.pets,
+      'icon': '🐐', // Emoji Kambing
       'unggulan': 'Boer / Etawa',
       'hargaUnggulan': 'Rp 55rb – 60rb',
       'lokal': 'Kacang / Jawarandu',
@@ -50,7 +49,7 @@ class _TrendhargaPageState extends State<TrendhargaPage> {
     },
     {
       'name': 'Domba',
-      'icon': Icons.pets,
+      'icon': '🐑', // Emoji Domba
       'unggulan': 'Garut / Merino',
       'hargaUnggulan': 'Rp 60rb – 65rb',
       'lokal': 'Ekor Tipis',
@@ -61,7 +60,7 @@ class _TrendhargaPageState extends State<TrendhargaPage> {
     },
     {
       'name': 'Kerbau',
-      'icon': Icons.pets,
+      'icon': '🐃', // Emoji Kerbau
       'unggulan': 'Sumbawa / Murrah',
       'hargaUnggulan': 'Rp 60rb – 65rb',
       'lokal': 'Lokal / Rawa',
@@ -149,10 +148,19 @@ class _TrendhargaPageState extends State<TrendhargaPage> {
                       ),
                       child: Column(
                         children: [
-                          Icon(data['icon'], color: isSelected ? primaryGreen : Colors.grey, size: 24),
-                          const SizedBox(height: 4),
+                            Text(
+                            data['icon'] as String, // Kita panggil Emoji-nya
+                            style: TextStyle(
+                              fontSize: 24, // Ukuran emoji
+                              // Jika emoji aslinya berwarna, color ini tidak akan ngefek
+                              // Tapi jika kita pakai emoji teks biasa (monokrom), ini akan berfungsi
+                              color: isSelected ? primaryGreen : Colors.grey,
+                            ),
+                          ),
+                          const SizedBox(height: 4,),
+                          // --- BAGIAN BAWAH: NAMA HEWAN ---
                           Text(
-                            data['name'],
+                            data['name'] as String, // Memanggil teks 'Sapi', 'Kambing', dll
                             style: TextStyle(
                               color: isSelected ? Colors.black : Colors.grey,
                               fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,

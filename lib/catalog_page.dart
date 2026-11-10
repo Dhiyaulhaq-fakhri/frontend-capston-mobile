@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend_capston/detail_produk_page.dart';
 
 class CatalogPage extends StatefulWidget {
   const CatalogPage({super.key});
@@ -470,7 +471,14 @@ class _CatalogPageState extends State<CatalogPage> {
                     SizedBox(
                       height: 36,
                       child: ElevatedButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const DetailProdukPage(),
+                            ),
+                          );
+                        },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: primaryGreen,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),

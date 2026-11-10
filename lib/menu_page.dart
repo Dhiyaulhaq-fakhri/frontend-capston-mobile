@@ -1,8 +1,11 @@
 
 import 'package:flutter/material.dart';
+import 'package:frontend_capston/catalog_page.dart';
 import 'package:frontend_capston/edukasi_page.dart';
 import 'package:frontend_capston/kalender_page.dart';
 import 'package:frontend_capston/kemitraan_page.dart';
+import 'package:frontend_capston/qurvest_page.dart';
+import 'package:frontend_capston/tabungan_page.dart';
 import 'package:frontend_capston/trendharga_page.dart';
 
 class MenuPage extends StatefulWidget {
@@ -68,23 +71,12 @@ class _MenuPageState extends State<MenuPage> {
                 subtitle: 'Temukan pilihan hewan ternak sehat dan sesuai',
                 popular: true,
                 longDescription: 'Jelajahi berbagai pilihan sapi, kambing, dan domba berkualitas unggul dari peternak terpercaya. Dilengkapi dengan detail bobot, usia, serta jaminan 100% sehat dan layak kurban.',
-                // onButtonPressed: () {
-                //   // Nanti kalau halaman katalog sudah siap, isi di sini
-                //   // Navigator.push(context, MaterialPageRoute(builder: (context) => const CatalogPage()));
-                // },
+                onButtonPressed: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => const CatalogPage()));
+                },
               ),
 
               const SizedBox(height: 14),
-
-              ExpandableFeatureCard(
-                icon: Icons.handshake_outlined,
-                title: 'Mengenai Transaksi',
-                subtitle: 'Panduan lengkap transaksi',
-                popular: false,
-                longDescription: 'Pelajari langkah-langkah mudah mulai dari memilih hewan, pilihan metode pembayaran, hingga melacak status pesanan Anda.',
-              ),
-
-              const SizedBox(height: 18),
 
               // INOVASI & LAYANAN
               _sectionTitle(
@@ -100,16 +92,9 @@ class _MenuPageState extends State<MenuPage> {
                 subtitle: 'Rencanakan & cicil kurban',
                 popular: true,
                 longDescription: 'Tabung dana kurban secara bertahap setiap bulan sesuai kemampuan Anda. Pembayaran terencana agar ibadah kurban terasa ringan tanpa beban di akhir.',
-              ),
-
-              const SizedBox(height: 14),
-
-              ExpandableFeatureCard(
-                icon: Icons.payments_outlined,
-                title: 'Penggemukan',
-                subtitle: 'Beli ternak saat anak, panen saat dewasa',
-                popular: false,
-                longDescription: 'Percayakan perawatan hewan kurban Anda pada mitra peternak berpengalaman. Asupan pakan terjaga dan dapatkan laporan kondisi hewan secara rutin.',
+                onButtonPressed: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => const TabunganPage()));
+                },
               ),
 
               const SizedBox(height: 14),
@@ -119,7 +104,10 @@ class _MenuPageState extends State<MenuPage> {
                 title: 'Sapi Berkelompok',
                 subtitle: 'Patungan sapi lebih ringan',
                 popular: false,
-                longDescription: 'Solusi cerdas berkurban sapi dengan biaya lebih terjangkau. Gabung bersama 2 - 7 sohibul kurban lainnya untuk mendapatkan sapi kualitas premium'
+                longDescription: 'Solusi cerdas berkurban sapi dengan biaya lebih terjangkau. Gabung bersama 2 - 7 sohibul kurban lainnya untuk mendapatkan sapi kualitas premium',
+                // onButtonPressed: () {
+                  
+                // },
               ),
 
               const SizedBox(height: 14),
@@ -130,6 +118,9 @@ class _MenuPageState extends State<MenuPage> {
                 subtitle: 'Investasi anakan, panen untungnya',
                 popular: false,
                 longDescription: 'Beli bibit ternak sekarang dan biarkan mitra kami merawatnya. Saat panen, pilih untuk mengambil hewan dewasa atau cairkan dalam bentuk bagi hasil penjualan.',
+                onButtonPressed: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => const  QurvestPage()));
+                },
               ),
 
               const SizedBox(height: 18),

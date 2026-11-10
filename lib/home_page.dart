@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:frontend_capston/edukasi_page.dart';
+import 'package:frontend_capston/kalender_page.dart';
 import 'package:frontend_capston/login_page.dart';
+import 'package:frontend_capston/qurvest_page.dart';
 import 'package:frontend_capston/trendharga_page.dart';
 
 class HomePage extends StatelessWidget {
@@ -143,9 +146,36 @@ class HomePage extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     // Tambahkan context di awal
-                    _buildMenuIcon(context, Icons.trending_up, "Qurvest"),
-                    _buildMenuIcon(context, Icons.menu_book, "Edukasi"),
-                    _buildMenuIcon(context, Icons.calendar_month, "Kalender"),
+                    _buildMenuIcon(
+                      context, 
+                      Icons.trending_up, 
+                      "Qurvest",
+                      onTap: () {
+                        Navigator.push(
+                          context, 
+                          MaterialPageRoute(builder: (context) => const QurvestPage()));
+                      },),
+
+                    _buildMenuIcon(
+                      context, 
+                      Icons.menu_book, 
+                      "Edukasi",
+                      onTap: () {
+                        Navigator.push(
+                          context, 
+                          MaterialPageRoute(builder: (context) => const EdukasiPage()));
+                      },),
+
+                    _buildMenuIcon(
+                      context,
+                      Icons.calendar_month, 
+                      "Kalender",
+                      onTap: () {
+                        Navigator.push(
+                          context, 
+                          MaterialPageRoute(builder: (context) => const KalenderPage()));
+                      },),
+
                     _buildMenuIcon(
                       context, // <-- Tambahkan context di sini juga
                       Icons.monetization_on, 

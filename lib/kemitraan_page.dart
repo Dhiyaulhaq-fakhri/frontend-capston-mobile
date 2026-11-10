@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
@@ -518,6 +520,7 @@ class _KemitraanPageState extends State<KemitraanPage> {
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             itemCount: _fotoKandang.length,
+            // ignore: unnecessary_underscores
             separatorBuilder: (_, __) => const SizedBox(width: 7),
             itemBuilder: (context, index) => Stack(children: [
               ClipRRect(

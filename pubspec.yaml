@@ -77,6 +77,7 @@ flutter:
     - resources/Iklan 4.jpg
     - resources/coutdown 1.png
     - resources/menu_banner.png
+    - resources/Image_Shadow.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
