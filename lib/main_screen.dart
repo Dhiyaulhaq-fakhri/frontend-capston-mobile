@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:frontend_capston/edukasi_page.dart';
+import 'package:frontend_capston/catalog_page.dart';
 import 'package:frontend_capston/home_page.dart';
 import 'package:frontend_capston/menu_page.dart';
 import 'package:frontend_capston/pesanan_page.dart'; 
@@ -23,12 +23,9 @@ class _MainScreenState extends State<MainScreen> {
   final List<Widget> _pages = [
     const HomePage(), 
     const MenuPage(), 
-    const Center(child: Text("Halaman Katalog")), 
-    const Center(child: Text("Halaman Pesanan")), 
-    const Center(child: Text("Halaman Akun")), 
-    const ProfilPage(),
+    const CatalogPage(), 
     const PesananPage(),
-    const EdukasiPage(),
+    const ProfilPage(),
   ];
 
   void _onItemTapped(int index) {
@@ -67,9 +64,7 @@ class _MainScreenState extends State<MainScreen> {
                 _buildNavItem(Icons.menu, "Menu", 1),
                 _buildNavItem(Icons.grid_view, "Katalog", 2),
                 _buildNavItem(Icons.receipt_long, "Pesanan", 3),
-                _buildNavItem(Icons.person_outline, "Akun", 4),
                 _buildNavItem(Icons.person, "Profil", 5),
-                _buildNavItem(Icons.school, "Edukasi", 6),
               ],
             ),
           ),
