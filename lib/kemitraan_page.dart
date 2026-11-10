@@ -1,748 +1,765 @@
-// ignore_for_file: deprecated_member_use, avoid_print
+import 'dart:io';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-
-void main() {
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  // ignore: use_super_parameters
-  const MyApp({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Kemitraan Peternak',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primaryColor: const Color(0xFF1B5E20), // Hijau Tua
-        scaffoldBackgroundColor: const Color(0xFFF8F9FA),
-        fontFamily: 'Roboto',
-        useMaterial3: true,
-      ),
-      home: const KemitraanPage(),
-    );
-  }
-}
+import 'package:geolocator/geolocator.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class KemitraanPage extends StatefulWidget {
-  // ignore: use_super_parameters
-  const KemitraanPage({Key? key}) : super(key: key);
+  const KemitraanPage({super.key});
 
   @override
   State<KemitraanPage> createState() => _KemitraanPageState();
 }
 
 class _KemitraanPageState extends State<KemitraanPage> {
-  final TextEditingController _namaPeternakanCtrl = TextEditingController(text: "Berkah Farm Sukabumi");
-  final TextEditingController _populasiCtrl = TextEditingController(text: "100 - 300 Ekor (Kandang Komersial Utama)");
-  final TextEditingController _alamatCtrl = TextEditingController(text: "Jl. Raya Parungkuda No. 45, RT 03/RW 02, Desa Bojongkokosan, Kec. Parungkuda, Kabupaten Sukabumi, Jawa Barat 43357");
-  final TextEditingController _namaPemilikCtrl = TextEditingController(text: "H. Rohman Sudrajat, S.Pt");
-  final TextEditingController _whatsappCtrl = TextEditingController(text: "081298448920");
+  final _formKey = GlobalKey<FormState>();
+  final _namaToko = TextEditingController(text: 'Berkah Farm Sukabumi');
+  final _populasi = TextEditingController(text: '100 - 300 Ekor (Kandang Komersial Utama)');
+  final _alamat = TextEditingController(
+    text: 'Jl. Raya Parungkuda No. 45, RT 03/RW 02, Desa Bojongkokosan, Kec. Parungkuda, Kabupaten Sukabumi, Jawa Barat 43357',
+  );
+  final _pemilik = TextEditingController(text: 'H. Rohman Sudrajat, S.Pt');
+  final _whatsapp = TextEditingController(text: '081298448920');
 
-  // State untuk kategori komoditas (multi-select simulation)
-  final List<String> _selectedKomoditas = ["Sapi Potong (Limousin/Simental)", "Domba / Kambing Etawa"];
+  final ImagePicker _imagePicker = ImagePicker();
+  final List<String> _kategori = ['Sapi Potong (Limousin/Simmental)'];
+  final List<XFile> _fotoKandang = [];
+  final Map<String, PlatformFile> _dokumen = {};
+  bool _pernyataan = false;
+  bool _loadingGps = false;
+  bool _submitting = false;
+  double? _latitude = -6.83742;
+  double? _longitude = 106.77218;
 
-  // --- FUNGSI-FUNGSI INTERAKTIF ---
-
-  void _onBackPressed() {
-    print("Navigasi kembali ditekan");
-  }
-
-  void _onDaftarMitraPressed() {
-    print("Tombol Gratis Biaya Daftar / Banner ditekan");
-  }
-
-  void _toggleKomoditas(String komoditas) {
-    setState(() {
-      if (_selectedKomoditas.contains(komoditas)) {
-        _selectedKomoditas.remove(komoditas);
-      } else {
-        _selectedKomoditas.add(komoditas);
-      }
-    });
-    print("Komoditas terpilih saat ini: $_selectedKomoditas");
-  }
-
-  void _onUploadDokumen(String jenisDokumen) {
-    print("Memilih file untuk: $jenisDokumen");
-    // Logika pemilihan file (image_picker / file_picker) bisa ditaruh di sini
-  }
-
-  void _onPinLocationPressed() {
-    print("Membuka peta untuk pin lokasi GPS");
-  }
-
-  void _onFotoFisikPressed() {
-    print("Membuka kamera / galeri untuk foto kandang");
-  }
-
-  void _onKonfirmasiPressed() {
-    print("Tombol Konfirmasi Penerimaan Hewan ditekan");
-    // Validasi form di sini sebelum lanjut
-  }
+  static const Color forest = Color(0xFF07552F);
+  static const Color deepForest = Color(0xFF064526);
+  static const Color pale = Color(0xFFF1F2FF);
+  static const Color ink = Color(0xFF17213A);
+  static const Color muted = Color(0xFF687184);
 
   @override
   void dispose() {
-    _namaPeternakanCtrl.dispose();
-    _populasiCtrl.dispose();
-    _alamatCtrl.dispose();
-    _namaPemilikCtrl.dispose();
-    _whatsappCtrl.dispose();
+    _namaToko.dispose();
+    _populasi.dispose();
+    _alamat.dispose();
+    _pemilik.dispose();
+    _whatsapp.dispose();
     super.dispose();
+  }
+
+  void _toast(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  Future<void> _ambilLokasi() async {
+    setState(() => _loadingGps = true);
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        _toast('Aktifkan layanan lokasi/GPS terlebih dahulu.');
+        await Geolocator.openLocationSettings();
+        return;
+      }
+
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.denied) {
+        _toast('Izin lokasi belum diberikan.');
+        return;
+      }
+      if (permission == LocationPermission.deniedForever) {
+        _toast('Izin lokasi ditolak permanen. Aktifkan dari pengaturan aplikasi.');
+        await Geolocator.openAppSettings();
+        return;
+      }
+
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 20),
+        ),
+      );
+      if (!mounted) return;
+      setState(() {
+        _latitude = position.latitude;
+        _longitude = position.longitude;
+      });
+      _toast('Lokasi GPS berhasil diperbarui.');
+    } catch (e) {
+      _toast('Gagal mengambil lokasi: $e');
+    } finally {
+      if (mounted) setState(() => _loadingGps = false);
+    }
+  }
+
+  Future<void> _bukaPeta() async {
+    if (_latitude == null || _longitude == null) {
+      _toast('Ambil lokasi GPS terlebih dahulu.');
+      return;
+    }
+    final uri = Uri.parse(
+      'https://www.google.com/maps/search/?api=1&query=$_latitude,$_longitude',
+    );
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      _toast('Tidak dapat membuka Google Maps.');
+    }
+  }
+
+  Future<void> _tambahFoto({ImageSource source = ImageSource.gallery}) async {
+    try {
+      if (source == ImageSource.gallery) {
+        final images = await _imagePicker.pickMultiImage(imageQuality: 85);
+        if (images.isNotEmpty && mounted) {
+          setState(() => _fotoKandang.addAll(images.take(3 - _fotoKandang.length)));
+        }
+      } else {
+        if (_fotoKandang.length >= 3) {
+          _toast('Maksimal 3 foto kandang.');
+          return;
+        }
+        final image = await _imagePicker.pickImage(source: source, imageQuality: 85);
+        if (image != null && mounted) setState(() => _fotoKandang.add(image));
+      }
+    } catch (e) {
+      _toast('Gagal memilih foto: $e');
+    }
+  }
+
+  Future<void> _pilihFoto() async {
+    if (_fotoKandang.length >= 3) {
+      _toast('Maksimal 3 foto kandang.');
+      return;
+    }
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Wrap(children: [
+          ListTile(
+            leading: const Icon(Icons.photo_library_outlined),
+            title: const Text('Pilih dari galeri'),
+            onTap: () {
+              Navigator.pop(context);
+              _tambahFoto();
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.camera_alt_outlined),
+            title: const Text('Ambil foto dengan kamera'),
+            onTap: () {
+              Navigator.pop(context);
+              _tambahFoto(source: ImageSource.camera);
+            },
+          ),
+        ]),
+      ),
+    );
+  }
+
+  Future<void> _unggahDokumen(String key) async {
+    try {
+      // file_picker v12+ / v13: pickFiles() mengembalikan List<PlatformFile>
+      // secara langsung, bukan FilePickerResult.
+      final files = await FilePicker.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],
+      );
+      if (files.isEmpty) return; // Pengguna membatalkan pemilihan.
+
+      final file = files.single;
+      // Pada file_picker v12+, properti size diganti dengan length().
+      final fileSize = await file.length();
+      if (fileSize != null && fileSize > 5 * 1024 * 1024) {
+        _toast('Ukuran file maksimal 5 MB.');
+        return;
+      }
+      setState(() => _dokumen[key] = file);
+      _toast('${file.name} berhasil dipilih.');
+    } catch (e) {
+      _toast('Gagal memilih dokumen: $e');
+    }
+  }
+
+  String _koordinat() {
+    if (_latitude == null || _longitude == null) return 'Lokasi belum tersedia';
+    return 'Lat: ${_latitude!.toStringAsFixed(5)}, Long: ${_longitude!.toStringAsFixed(5)}';
+  }
+
+  Future<void> _submitForm() async {
+    FocusScope.of(context).unfocus();
+    if (!_formKey.currentState!.validate()) {
+      _toast('Periksa kembali data yang wajib diisi.');
+      return;
+    }
+    if (_kategori.isEmpty) {
+      _toast('Pilih minimal satu kategori komoditas ternak.');
+      return;
+    }
+    if (!_pernyataan) {
+      _toast('Centang pernyataan amanah peternak terlebih dahulu.');
+      return;
+    }
+    if (_dokumen['ktp'] == null || _dokumen['skkh'] == null) {
+      _toast('Unggah KTP penanggung jawab dan SKKH terlebih dahulu.');
+      return;
+    }
+
+    setState(() => _submitting = true);
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Daftarkan Toko'),
+        content: SingleChildScrollView(
+          child: Text(
+            'Data kemitraan siap dikirim.\n\n'
+            'Nama toko: ${_namaToko.text}\n'
+            'Pemilik: ${_pemilik.text}\n'
+            'WhatsApp: ${_whatsapp.text}\n'
+            'Kategori: ${_kategori.join(', ')}\n'
+            'Lokasi: ${_koordinat()}\n'
+            'Foto kandang: ${_fotoKandang.length} file\n'
+            'Dokumen: ${_dokumen.length} file\n\n'
+            'Saat ini data hanya divalidasi di aplikasi. Hubungkan fungsi ini '
+            'ke API/backend agar pendaftaran benar-benar tersimpan.',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Kembali'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: forest),
+            onPressed: () {
+              Navigator.pop(dialogContext);
+              _toast('Validasi pendaftaran berhasil.');
+            },
+            child: const Text('Selesai'),
+          ),
+        ],
+      ),
+    );
+    if (mounted) setState(() => _submitting = false);
+  }
+
+  InputDecoration _inputDecoration({String? hint, Widget? suffixIcon}) {
+    return InputDecoration(
+      hintText: hint,
+      filled: true,
+      fillColor: pale,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 13, vertical: 14),
+      suffixIcon: suffixIcon,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: forest, width: 1.2),
+      ),
+    );
+  }
+
+  Widget _fieldLabel(String title, {bool required = false, String? helper}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 7, top: 13),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        RichText(
+          text: TextSpan(
+            style: const TextStyle(color: ink, fontSize: 12, fontWeight: FontWeight.w700),
+            children: [
+              TextSpan(text: title),
+              if (required)
+                const TextSpan(text: ' *', style: TextStyle(color: Colors.red)),
+            ],
+          ),
+        ),
+        if (helper != null) ...[
+          const SizedBox(height: 4),
+          Text(helper, style: const TextStyle(fontSize: 10.5, color: muted)),
+        ],
+      ]),
+    );
+  }
+
+  Widget _textField(
+    TextEditingController controller, {
+    required String label,
+    bool required = false,
+    String? helper,
+    int maxLines = 1,
+    TextInputType? keyboardType,
+    String? Function(String?)? validator,
+    Widget? suffixIcon,
+  }) {
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      _fieldLabel(label, required: required, helper: helper),
+      TextFormField(
+        controller: controller,
+        maxLines: maxLines,
+        keyboardType: keyboardType,
+        style: const TextStyle(fontSize: 11.5, color: ink),
+        decoration: _inputDecoration(suffixIcon: suffixIcon),
+        validator: validator ??
+            (required
+                ? (value) => value == null || value.trim().isEmpty ? '$label wajib diisi.' : null
+                : null),
+      ),
+    ]);
+  }
+
+  Widget _sectionCard({required Widget child}) => Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(13),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(17),
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(.035), blurRadius: 12, offset: const Offset(0, 4))],
+        ),
+        child: child,
+      );
+
+  Widget _categoryChip(String text) {
+    final selected = _kategori.contains(text);
+    return InkWell(
+      borderRadius: BorderRadius.circular(20),
+      onTap: () => setState(() {
+        selected ? _kategori.remove(text) : _kategori.add(text);
+      }),
+      child: Container(
+        margin: const EdgeInsets.only(right: 6, bottom: 7),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        decoration: BoxDecoration(
+          color: selected ? deepForest : const Color(0xFFE9ECFF),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(mainAxisSize: MainAxisSize.min, children: [
+          Icon(selected ? Icons.check_circle_outline : Icons.add_circle_outline,
+              color: selected ? Colors.white : const Color(0xFF7A8294), size: 13),
+          const SizedBox(width: 5),
+          Text(text, style: TextStyle(fontSize: 10, color: selected ? Colors.white : ink, fontWeight: FontWeight.w600)),
+        ]),
+      ),
+    );
+  }
+
+  Widget _documentTile(String key, String title, String subtitle, IconData icon, {bool optional = false}) {
+    final file = _dokumen[key];
+    return Container(
+      margin: const EdgeInsets.only(top: 7),
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 9),
+      decoration: BoxDecoration(color: pale, borderRadius: BorderRadius.circular(11)),
+      child: Row(children: [
+        Container(
+          width: 29, height: 29,
+          decoration: BoxDecoration(color: const Color(0xFFD9F2E6), borderRadius: BorderRadius.circular(7)),
+          child: Icon(icon, color: forest, size: 16),
+        ),
+        const SizedBox(width: 8),
+        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(title, style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, color: ink)),
+          Text(file?.name ?? (optional ? 'Opsional tapi diutamakan' : subtitle),
+              maxLines: 1, overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 9, color: file == null ? muted : forest)),
+          if (file != null && file.lengthSync() != null)
+            Text('${(file.lengthSync()! / (1024 * 1024)).toStringAsFixed(1)} MB',
+                style: const TextStyle(fontSize: 8.5, color: muted)),
+        ])),
+        IconButton(
+          visualDensity: VisualDensity.compact,
+          tooltip: file == null ? 'Unggah dokumen' : 'Ganti dokumen',
+          onPressed: () => _unggahDokumen(key),
+          icon: Icon(file == null ? Icons.upload_file : Icons.refresh, color: forest, size: 19),
+        ),
+      ]),
+    );
+  }
+
+  Widget _hero() {
+    return Container(
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(17),
+        gradient: const LinearGradient(
+          colors: [Color(0xFF06472A), Color(0xFF08713D)],
+          begin: Alignment.topLeft, end: Alignment.bottomRight,
+        ),
+        boxShadow: [BoxShadow(color: forest.withOpacity(.18), blurRadius: 15, offset: const Offset(0, 7))],
+      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+          decoration: BoxDecoration(color: Colors.white.withOpacity(.15), borderRadius: BorderRadius.circular(20)),
+          child: const Text('✿  Mitra Terverifikasi DSN-MUI & SKKH', style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w600)),
+        ),
+        const SizedBox(height: 6),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          decoration: BoxDecoration(color: const Color(0xFFFFDDA7), borderRadius: BorderRadius.circular(20)),
+          child: const Text('GRATIS BIAYA DAFTAR', style: TextStyle(color: deepForest, fontSize: 8, fontWeight: FontWeight.w900)),
+        ),
+        const SizedBox(height: 12),
+        const Text('Buka Toko Ternak & Raih\nPasar Kurban Nasional',
+            style: TextStyle(color: Colors.white, fontSize: 18, height: 1.2, fontWeight: FontWeight.w800)),
+        const SizedBox(height: 7),
+        Text('Jangkau puluhan ribu shohibul qurban & investor QRvest tanpa perantara tengkulak. 100% Sesuai Syariat Islam.',
+            style: TextStyle(color: Colors.white.withOpacity(.85), fontSize: 10.5, height: 1.4)),
+        const SizedBox(height: 12),
+        Wrap(spacing: 6, runSpacing: 6, children: const [
+          _HeroFeature(icon: Icons.account_balance_wallet_outlined, text: 'Pencairan H+1\nAkad'),
+          _HeroFeature(icon: Icons.trending_up, text: 'Akses Modal\nQRvest'),
+          _HeroFeature(icon: Icons.medical_services_outlined, text: 'Dampingan\nDokter Disnak'),
+          _HeroFeature(icon: Icons.sensors, text: 'Timbangan Digital\nIoT'),
+        ]),
+      ]),
+    );
+  }
+
+  Widget _progress() {
+    return _sectionCard(
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          const Icon(Icons.circle, color: forest, size: 8),
+          const SizedBox(width: 5),
+          const Text('PENDAFTARAN KEMITRAAN', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w900, color: deepForest)),
+          const Spacer(),
+          const Text('Langkah 1 dari 4', style: TextStyle(fontSize: 9, color: muted)),
+        ]),
+        const SizedBox(height: 10),
+        Row(children: List.generate(4, (i) => Expanded(
+          child: Container(
+            margin: EdgeInsets.only(right: i == 3 ? 0 : 5),
+            height: 4,
+            decoration: BoxDecoration(color: i == 0 ? forest : const Color(0xFFD8DDF3), borderRadius: BorderRadius.circular(8)),
+          ),
+        ))),
+        const SizedBox(height: 6),
+        const Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+          Text('1. Profil Toko', style: TextStyle(fontSize: 8, color: deepForest, fontWeight: FontWeight.w700)),
+          Text('2. Kandang', style: TextStyle(fontSize: 8, color: muted)),
+          Text('3. SKKH Disnak', style: TextStyle(fontSize: 8, color: muted)),
+          Text('4. Akad Bank', style: TextStyle(fontSize: 8, color: muted)),
+        ]),
+      ]),
+    );
+  }
+
+  Widget _mapPanel() {
+    return Column(children: [
+      Container(
+        height: 115,
+        width: double.infinity,
+        clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(12), color: const Color(0xFFE5EBDD)),
+        child: Stack(fit: StackFit.expand, children: [
+          CustomPaint(painter: _MapPainter()),
+          const Positioned(left: 12, top: 10, child: Text('Lokasi kandang terdeteksi', style: TextStyle(fontSize: 9, color: forest, fontWeight: FontWeight.w700))),
+          const Center(child: Icon(Icons.location_on, color: Color(0xFFB77B32), size: 30)),
+          Positioned(
+            right: 7, bottom: 7,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+              decoration: BoxDecoration(color: forest, borderRadius: BorderRadius.circular(6)),
+              child: const Text('TERSEMAT', style: TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.w800)),
+            ),
+          ),
+        ]),
+      ),
+      const SizedBox(height: 5),
+      Text(_koordinat(), style: const TextStyle(fontSize: 9, color: muted)),
+      const SizedBox(height: 7),
+      Row(children: [
+        Expanded(child: OutlinedButton.icon(
+          onPressed: _loadingGps ? null : _ambilLokasi,
+          icon: _loadingGps
+              ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2))
+              : const Icon(Icons.location_searching, size: 15),
+          label: const Text('Ubah Pin Lokasi GPS', textAlign: TextAlign.center),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: deepForest, backgroundColor: const Color(0xFFE5E9FF),
+            side: BorderSide.none, padding: const EdgeInsets.symmetric(vertical: 10),
+            textStyle: const TextStyle(fontSize: 9, fontWeight: FontWeight.w700),
+          ),
+        )),
+        const SizedBox(width: 6),
+        Expanded(child: OutlinedButton.icon(
+          onPressed: _pilihFoto,
+          icon: const Icon(Icons.photo_camera_outlined, size: 15),
+          label: const Text('Foto Fisik Kandang (3)', textAlign: TextAlign.center),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: deepForest, backgroundColor: const Color(0xFFDDEDE5),
+            side: BorderSide.none, padding: const EdgeInsets.symmetric(vertical: 10),
+            textStyle: const TextStyle(fontSize: 9, fontWeight: FontWeight.w700),
+          ),
+        )),
+      ]),
+      Align(
+        alignment: Alignment.centerLeft,
+        child: TextButton.icon(
+          onPressed: _bukaPeta,
+          icon: const Icon(Icons.map_outlined, size: 15),
+          label: const Text('Buka lokasi di Google Maps'),
+          style: TextButton.styleFrom(foregroundColor: forest, textStyle: const TextStyle(fontSize: 10)),
+        ),
+      ),
+      if (_fotoKandang.isNotEmpty)
+        SizedBox(
+          height: 72,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: _fotoKandang.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 7),
+            itemBuilder: (context, index) => Stack(children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(9),
+                child: Image.file(File(_fotoKandang[index].path), width: 72, height: 72, fit: BoxFit.cover),
+              ),
+              Positioned(right: 0, top: 0, child: InkWell(
+                onTap: () => setState(() => _fotoKandang.removeAt(index)),
+                child: Container(
+                  padding: const EdgeInsets.all(3),
+                  decoration: const BoxDecoration(color: Colors.black54, shape: BoxShape.circle),
+                  child: const Icon(Icons.close, color: Colors.white, size: 13),
+                ),
+              )),
+            ]),
+          ),
+        ),
+    ]);
+  }
+
+  Widget _benefitCard(IconData icon, String title, String description) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(11),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(.03), blurRadius: 9, offset: const Offset(0, 3))]),
+      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Container(width: 34, height: 34, decoration: BoxDecoration(color: deepForest, borderRadius: BorderRadius.circular(9)),
+          child: Icon(icon, color: Colors.white, size: 19)),
+        const SizedBox(width: 10),
+        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(title, style: const TextStyle(fontSize: 11.5, color: ink, fontWeight: FontWeight.w800)),
+          const SizedBox(height: 4),
+          Text(description, style: const TextStyle(fontSize: 9.5, color: muted, height: 1.4)),
+        ])),
+      ]),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF8F7FC),
       body: SafeArea(
-        child: Stack(
-          children: [
-            // --- KONTEN UTAMA (SCROLLABLE) ---
-            CustomScrollView(
-              slivers: [
-                SliverToBoxAdapter(child: _buildHeaderAndHero()),
-                SliverPadding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 24.0),
-                  sliver: SliverList(
-                    delegate: SliverChildListDelegate([
-                      _buildStepperIndicator(),
-                      const SizedBox(height: 24),
-                      _buildTitleSection(),
-                      const SizedBox(height: 24),
-                      _buildFormSection(),
-                      const SizedBox(height: 32),
-                      _buildKeuntunganMitraSection(),
-                      const SizedBox(height: 24),
-                      _buildKisahSuksesCard(),
-                      const SizedBox(height: 24),
-                      _buildPernyataanCard(),
-                      const SizedBox(height: 100), // Spasi untuk bottom button
+        child: Form(
+          key: _formKey,
+          child: CustomScrollView(
+            slivers: [
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(14, 8, 14, 20),
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Row(children: [
+                      IconButton(
+                        onPressed: () => Navigator.maybePop(context),
+                        icon: const Icon(Icons.arrow_back),
+                        style: IconButton.styleFrom(backgroundColor: Colors.white, foregroundColor: ink),
+                      ),
+                      const Spacer(),
+                      Column(children: const [
+                        Text('Kemitraan', style: TextStyle(color: deepForest, fontSize: 16, fontWeight: FontWeight.w900)),
+                        Text('buat toko usahamu sendiri dan bergabung dengan kami', style: TextStyle(color: forest, fontSize: 8)),
+                      ]),
+                      const Spacer(),
+                      const SizedBox(width: 42),
                     ]),
-                  ),
-                ),
-              ],
-            ),
-            
-            // --- FLOATING BOTTOM BUTTON ---
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              child: Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  boxShadow: [
-                    BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -5))
-                  ],
-                ),
-                child: ElevatedButton(
-                  onPressed: _onKonfirmasiPressed,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFE6A817), // Warna Emas/Oranye
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.touch_app_outlined, size: 20),
-                      SizedBox(width: 8),
-                      Text("Konfirmasi Penerimaan Hewan", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                      SizedBox(width: 8),
-                      Icon(Icons.arrow_forward, size: 20),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // --- WIDGET BUILDERS ---
-
-  Widget _buildHeaderAndHero() {
-    return Column(
-      children: [
-        // App Bar
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-          child: Row(
-            children: [
-              IconButton(
-                onPressed: _onBackPressed,
-                icon: const Icon(Icons.arrow_back, color: Colors.black),
-                style: IconButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  shape: const CircleBorder(),
-                  side: BorderSide(color: Colors.grey.shade300),
-                ),
-              ),
-              const Expanded(
-                child: Column(
-                  children: [
-                    Text("Kemitraan", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF1B5E20))),
-                    Text("buat toko usaha sendiri dan bergabung dengan kami", style: TextStyle(fontSize: 10, color: Colors.black54)),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 40),
-            ],
-          ),
-        ),
-        // Hero Card
-        Container(
-          margin: const EdgeInsets.symmetric(horizontal: 20),
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: const Color(0xFF1B5E20),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(color: const Color(0xFF2E7D32), borderRadius: BorderRadius.circular(20)),
-                    child: const Row(
-                      children: [
-                        Icon(Icons.verified, color: Colors.white, size: 12),
-                        SizedBox(width: 4),
-                        Text("Mitra Terverifikasi DSN-MUI & SKKH", style: TextStyle(color: Colors.white, fontSize: 10)),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(color: const Color(0xFFFFD54F), borderRadius: BorderRadius.circular(20)),
-                    child: const Text("GRATIS BIAYA DAFTAR", style: TextStyle(color: Colors.black, fontSize: 10, fontWeight: FontWeight.bold)),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              const Text("Buka Toko Ternak & Raih\nPasar Kurban Nasional", style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
-              const Text("Jangkau puluhan ribu shohibul qurban & investor QRest tanpa perantara tengkulak. 100% Sesuai Syariat Islam.", style: TextStyle(color: Colors.white70, fontSize: 12)),
-              const SizedBox(height: 16),
-              GridView.count(
-                crossAxisCount: 2,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                mainAxisSpacing: 8,
-                crossAxisSpacing: 8,
-                childAspectRatio: 3.5,
-                children: [
-                  _buildHeroFeature(Icons.search, "Pencairan H+1\nAkad"),
-                  _buildHeroFeature(Icons.attach_money, "Akses Modal\nQRest"),
-                  _buildHeroFeature(Icons.medical_services, "Dampingan\nDokter Disnak"),
-                  _buildHeroFeature(Icons.monitor_weight, "Timbangan Digital\nIoT"),
-                ],
-              )
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildHeroFeature(IconData icon, String text) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(color: Colors.white.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
-      child: Row(
-        children: [
-          Icon(icon, color: Colors.white, size: 16),
-          const SizedBox(width: 8),
-          Expanded(child: Text(text, style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w500))),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStepperIndicator() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Row(
-              children: [
-                Icon(Icons.circle, size: 10, color: Color(0xFF1B5E20)),
-                SizedBox(width: 6),
-                Text("PENDAFTARAN KEMITRAAN", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1)),
-              ],
-            ),
-            Text("Langkah 1 dari 4", style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
-          ],
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(flex: 1, child: _buildStepProgress(1, "Profil Toko", true)),
-            const SizedBox(width: 8),
-            Expanded(flex: 1, child: _buildStepProgress(2, "Kandang", false)),
-            const SizedBox(width: 8),
-            Expanded(flex: 1, child: _buildStepProgress(3, "SKKH Disnak", false)),
-            const SizedBox(width: 8),
-            Expanded(flex: 1, child: _buildStepProgress(4, "Akad Bank", false)),
-          ],
-        )
-      ],
-    );
-  }
-
-  Widget _buildStepProgress(int step, String label, bool isActive) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          height: 4,
-          decoration: BoxDecoration(
-            color: isActive ? const Color(0xFF1B5E20) : Colors.grey.shade300,
-            borderRadius: BorderRadius.circular(2),
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text("$step. $label", style: TextStyle(fontSize: 10, color: isActive ? Colors.black87 : Colors.grey.shade500, fontWeight: isActive ? FontWeight.bold : FontWeight.normal)),
-      ],
-    );
-  }
-
-  Widget _buildTitleSection() {
-    return const Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text("Data Identitas Peternakan", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-        SizedBox(height: 4),
-        Text("Lengkapi detail toko untuk mulai memasarkan hewan qurban secara terverifikasi.", style: TextStyle(fontSize: 12, color: Colors.black54)),
-      ],
-    );
-  }
-
-  Widget _buildFormSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildInputField("Nama Peternakan / Toko Ternak *", "Sesuai plang/akta", _namaPeternakanCtrl, Icons.storefront),
-        const SizedBox(height: 16),
-        
-        const Text("Kategori Komoditas Ternak *", style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 4),
-        const Text("Pilih komoditas yang saat ini siap atau dipelihara di kandang:", style: TextStyle(fontSize: 11, color: Colors.black54)),
-        const SizedBox(height: 8),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            _buildKomoditasChip("Sapi Potong (Limousin/Simental)"),
-            _buildKomoditasChip("Domba / Kambing Etawa"),
-            _buildKomoditasChip("Bibit Anakan (Pedet/Cempe)", isAdd: true),
-            _buildKomoditasChip("Sapi Perah & Olahan", isAdd: true),
-          ],
-        ),
-        const SizedBox(height: 16),
-
-        _buildInputField("Estimasi Populasi & Kapasitas Kandang *", "", _populasiCtrl, Icons.home_work),
-        const SizedBox(height: 16),
-
-        _buildInputField("Alamat Kandang & Titik Presisi GPS *", "", _alamatCtrl, Icons.location_on, maxLines: 3),
-        const SizedBox(height: 8),
-        _buildMapPreview(),
-        const SizedBox(height: 16),
-
-        _buildInputField("Nama Pemilik / Penanggung Jawab *", "", _namaPemilikCtrl, Icons.person),
-        const SizedBox(height: 16),
-
-        _buildInputField("Kontak WhatsApp Aktif (Notifikasi Order) *", "", _whatsappCtrl, Icons.phone_android),
-        const SizedBox(height: 24),
-
-        const Text("Upload Dokumen Legalitas & Kesehatan Ternak", style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-        const Text("Format didukung: JPG, PNG, atau PDF (Maks. 5MB per berkas)", style: TextStyle(fontSize: 11, color: Colors.black54)),
-        const SizedBox(height: 12),
-        
-        _buildDocumentUploadCard("KTP Penanggung Jawab Toko", "ktp_h_rohman_verif.jpg (1.8 MB)", Icons.badge, true),
-        const SizedBox(height: 8),
-        _buildDocumentUploadCard("SKKH Resmi dari Dinas Peternakan", "skkh_dinas_peternakan_2024.pdf (2.4 MB)", Icons.health_and_safety, true),
-        const SizedBox(height: 8),
-        _buildDocumentUploadCard("Sertifikasi Juru Sembelih Halal", "Opsional tapi diutamakan", Icons.workspace_premium, false),
-      ],
-    );
-  }
-
-  Widget _buildInputField(String label, String hint, TextEditingController controller, IconData icon, {int maxLines = 1}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-            if (hint.isNotEmpty) ...[
-              const SizedBox(width: 4),
-              Text(hint, style: const TextStyle(fontSize: 10, color: Colors.red)),
-            ]
-          ],
-        ),
-        const SizedBox(height: 8),
-        TextField(
-          controller: controller,
-          maxLines: maxLines,
-          decoration: InputDecoration(
-            prefixIcon: Icon(icon, color: Colors.grey.shade600, size: 20),
-            filled: true,
-            fillColor: const Color(0xFFF1F3F4),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-            contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildKomoditasChip(String text, {bool isAdd = false}) {
-    bool isSelected = _selectedKomoditas.contains(text);
-    return GestureDetector(
-      onTap: () => _toggleKomoditas(text),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF1B5E20) : Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: isSelected ? Colors.transparent : Colors.grey.shade300),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (isAdd && !isSelected) ...[
-              Icon(Icons.add_circle_outline, size: 16, color: Colors.grey.shade600),
-              const SizedBox(width: 4),
-            ],
-            Text(
-              text,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                color: isSelected ? Colors.white : Colors.black87,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMapPreview() {
-    return Column(
-      children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(12),
-          child: Stack(
-            children: [
-              Image.network(
-                'https://maps.googleapis.com/maps/api/staticmap?center=-6.83742,106.77218&zoom=14&size=600x300&maptype=roadmap&markers=color:red%7C-6.83742,106.77218&key=YOUR_API_KEY', // Ganti dengan URL statik peta asli atau aset
-                height: 120,
-                width: double.infinity,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => Container(
-                  height: 120,
-                  color: Colors.grey.shade300,
-                  child: const Center(child: Text("Peta Lokasi (Placeholder)")),
-                ),
-              ),
-              Positioned(
-                bottom: 8,
-                left: 8,
-                right: 8,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(color: Colors.black.withOpacity(0.6), borderRadius: BorderRadius.circular(4)),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text("Lat: -6.83742, Long: 106.77218 (AK)", style: TextStyle(color: Colors.white, fontSize: 10)),
-                      Text("TERSEMAT", style: TextStyle(color: Colors.orangeAccent, fontSize: 10, fontWeight: FontWeight.bold)),
-                    ],
-                  ),
-                ),
-              )
-            ],
-          ),
-        ),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: _onPinLocationPressed,
-                icon: const Icon(Icons.location_on, size: 16),
-                label: const Text("Ubah Pin Lokasi GPS", style: TextStyle(fontSize: 12)),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: const Color(0xFF1B5E20),
-                  side: BorderSide(color: Colors.grey.shade300),
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: _onFotoFisikPressed,
-                icon: const Icon(Icons.camera_alt, size: 16),
-                label: const Text("Foto Fisik Kandang (3)", style: TextStyle(fontSize: 12)),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: const Color(0xFF1B5E20),
-                  side: BorderSide(color: Colors.grey.shade300),
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                ),
-              ),
-            ),
-          ],
-        )
-      ],
-    );
-  }
-
-  Widget _buildDocumentUploadCard(String title, String subtitle, IconData icon, bool isUploaded) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF1F3F4),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
-            child: Icon(icon, color: const Color(0xFF1B5E20), size: 24),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 2),
-                Text(subtitle, style: TextStyle(fontSize: 10, color: isUploaded ? Colors.green.shade700 : Colors.grey.shade600)),
-              ],
-            ),
-          ),
-          if (isUploaded)
-            IconButton(
-              onPressed: () => _onUploadDokumen(title),
-              icon: const Icon(Icons.sync, color: Colors.grey),
-              tooltip: "Ganti File",
-            )
-          else
-            ElevatedButton(
-              onPressed: () => _onUploadDokumen(title),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF1B5E20),
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                minimumSize: Size.zero,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              ),
-              child: const Row(
-                children: [
-                  Icon(Icons.upload_file, size: 14),
-                  SizedBox(width: 4),
-                  Text("Unggah", style: TextStyle(fontSize: 11)),
-                ],
-              ),
-            )
-        ],
-      ),
-    );
-  }
-
-  Widget _buildKeuntunganMitraSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Row(
-          children: [
-            Icon(Icons.circle, size: 10, color: Color(0xFF1B5E20)),
-            SizedBox(width: 6),
-            Text("Keuntungan Mitra Peternak", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-          ],
-        ),
-        const SizedBox(height: 4),
-        const Text("Solusi hulu-ke-hilir untuk mempercepat perputaran panen qurban Anda.", style: TextStyle(fontSize: 12, color: Colors.black54)),
-        const SizedBox(height: 16),
-        _buildBenefitCard(Icons.savings, "Akses Langsung ke Program QRest", "Dapatkan injeksi pembiayaan bibit dan pakan hijauan bernutrisi tinggi dari ribuan investor terverifikasi tanpa bunga riba."),
-        _buildBenefitCard(Icons.local_shipping, "Sistem Ekspedisi & Karantina Terpadu", "Armada logistik berstandar \"Animal Welfare\" siap menjemput hewan langsung dari kandang menuju masjid atau titik distribusi nasional."),
-        _buildBenefitCard(Icons.monitor_weight, "Sertifikat Timbang Digital & Live Feed", "Fitur integrasi timbangan otomatis dan kamera kandang 24/7 membangun kepercayaan shohibul qurban tanpa perlu tatap muka langsung."),
-        _buildBenefitCard(Icons.handshake, "Akad Syariah Wakalah & Tijarah", "Semua transaksi dilindungi akad syariah transparan. Dana pembayaran langsung ditransfer H+1 setelah serah terima hewan disahkan."),
-      ],
-    );
-  }
-
-  Widget _buildBenefitCard(IconData icon, String title, String desc) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(color: const Color(0xFF1B5E20), borderRadius: BorderRadius.circular(10)),
-            child: Icon(icon, color: Colors.white, size: 24),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 4),
-                Text(desc, style: const TextStyle(fontSize: 11, color: Colors.black54)),
-              ],
-            ),
-          )
-        ],
-      ),
-    );
-  }
-
-  Widget _buildKisahSuksesCard() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFE8EAF6), // Warna ungu kebiruan pudar
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.indigo.shade100),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text("KISAH SUKSES MITRA", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1, color: Colors.indigo)),
-              Row(
-                children: [
-                  const Icon(Icons.star, color: Colors.orange, size: 14),
-                  const SizedBox(width: 4),
-                  Text("4.9 / 5.0", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.indigo.shade900)),
-                ],
-              )
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              const CircleAvatar(
-                radius: 24,
-                backgroundImage: NetworkImage('https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80'), // Placeholder
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Row(
-                      children: [
-                        Text("Pak H. Rohman", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                        SizedBox(width: 4),
-                        Icon(Icons.verified, color: Colors.blue, size: 14),
-                      ],
-                    ),
-                    const Text("Barkah Farm • Garut, Jawa Barat", style: TextStyle(fontSize: 11, color: Colors.black54)),
+                    const SizedBox(height: 9),
+                    _hero(),
+                    const SizedBox(height: 13),
+                    _progress(),
+                    const SizedBox(height: 18),
+                    const Text('Data Identitas Peternakan', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w900, color: ink)),
                     const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(color: const Color(0xFF1B5E20), borderRadius: BorderRadius.circular(4)),
-                          child: const Text("340 Ekor Terjual", style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold)),
+                    const Text('Lengkapi detail toko untuk mulai memasarkan hewan qurban secara terverifikasi.',
+                        style: TextStyle(fontSize: 10, color: muted)),
+                    const SizedBox(height: 10),
+                    _sectionCard(
+                      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        _textField(_namaToko, label: 'Nama Peternakan / Toko Ternak', required: true),
+                        _fieldLabel('Kategori Komoditas Ternak', required: true, helper: 'Pilih komoditas yang saat ini siap atau dipelihara di kandang:'),
+                        Wrap(children: [
+                          _categoryChip('Sapi Potong (Limousin/Simmental)'),
+                          _categoryChip('Domba / Kambing Etawa'),
+                          _categoryChip('Bibit Anakan (Pedet/Cempe)'),
+                          _categoryChip('Sapi Perah & Olahan'),
+                        ]),
+                        _textField(_populasi, label: 'Estimasi Populasi & Kapasitas Kandang', required: true,
+                            suffixIcon: const Icon(Icons.home_work_outlined, size: 17)),
+                        _textField(_alamat, label: 'Alamat Kandang & Titik Presisi GPS', required: true, maxLines: 3),
+                        const SizedBox(height: 10),
+                        _mapPanel(),
+                        _textField(_pemilik, label: 'Nama Pemilik / Penanggung Jawab', required: true),
+                        _textField(_whatsapp, label: 'Kontak WhatsApp Aktif (Notifikasi Order)', required: true,
+                            keyboardType: TextInputType.phone,
+                            validator: (v) => v == null || v.trim().length < 9 ? 'Masukkan nomor WhatsApp yang valid.' : null),
+                        _fieldLabel('Upload Dokumen Legalitas & Kesehatan Ternak', helper: 'Format didukung: JPG, PNG, atau PDF (Maks. 5MB per berkas)'),
+                        _documentTile('ktp', 'KTP Penanggung Jawab Toko', 'Wajib diunggah', Icons.description_outlined),
+                        _documentTile('skkh', 'SKKH Resmi dari Dinas Peternakan', 'Wajib diunggah', Icons.health_and_safety_outlined),
+                        _documentTile('sertifikat', 'Sertifikasi Juru Sembelih Halal', 'Opsional tapi diutamakan', Icons.workspace_premium_outlined, optional: true),
+                      ]),
+                    ),
+                    const SizedBox(height: 19),
+                    const Text('Keuntungan Mitra Peternakan', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: ink)),
+                    const SizedBox(height: 4),
+                    const Text('Solusi hulu-ke-hilir untuk mempercepat perputaran panen qurban Anda.', style: TextStyle(fontSize: 9.5, color: muted)),
+                    const SizedBox(height: 10),
+                    _benefitCard(Icons.account_balance_wallet_outlined, 'Akses Langsung ke Program QRvest',
+                        'Dapatkan injeksi pembiayaan bibit dan pakan hijauan bernutrisi tinggi dari investor terverifikasi tanpa bunga riba.'),
+                    _benefitCard(Icons.local_shipping_outlined, 'Sistem Ekspedisi & Karantina Terpadu',
+                        'Armada logistik berstandar Animal Welfare siap menjemput hewan qurban langsung dari kandang menuju masjid atau titik distribusi nasional.'),
+                    _benefitCard(Icons.videocam_outlined, 'Sertifikat Timbang Digital & Live Feed',
+                        'Fitur integrasi timbangan otomatis dan kamera kandang 24/7 membangun kepercayaan shohibul qurban tanpa perlu tatap muka langsung.'),
+                    _benefitCard(Icons.gavel_outlined, 'Akad Syariah Wakalah & Tijarah',
+                        'Semua transaksi dilindungi akad syariah transparan. Dana pembayaran langsung ditransfer H+1 setelah serah terima hewan disahkan.'),
+                    Container(
+                      width: double.infinity,
+                      margin: const EdgeInsets.only(top: 3, bottom: 14),
+                      padding: const EdgeInsets.all(13),
+                      decoration: BoxDecoration(color: const Color(0xFFE5E9FF), borderRadius: BorderRadius.circular(15)),
+                      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        const Text('KISAH SUKSES MITRA', style: TextStyle(fontSize: 8, color: deepForest, fontWeight: FontWeight.w900)),
+                        const SizedBox(height: 8),
+                        Row(children: [
+                          const CircleAvatar(radius: 21, backgroundColor: Color(0xFFB7C9B9), child: Icon(Icons.person, color: forest)),
+                          const SizedBox(width: 9),
+                          const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                            Text('Pak H. Rohman', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: ink)),
+                            Text('Barokah Farm • Garut, Jawa Barat', style: TextStyle(fontSize: 9, color: muted)),
+                            Text('340 Ekor Terjual  •  Omzet Rp 1.2 Miliar (2023)', style: TextStyle(fontSize: 8, color: deepForest, fontWeight: FontWeight.w700)),
+                          ])),
+                          const Text('★ 4.9 / 5.0', style: TextStyle(fontSize: 9, color: Color(0xFF8A5A00), fontWeight: FontWeight.w800)),
+                        ]),
+                        const SizedBox(height: 9),
+                        const Text('“Alhamdulillah sejak buka toko di QRbarkan, kami tak lagi pusing memikirkan harga dipermainkan tengkulak. Pembayaran cair cepat, sertifikasi dokter dinas sangat transparan, dan kambing domba kami dibeli jamaah dari Jabodetabek hingga Surabaya.”',
+                            style: TextStyle(fontSize: 9, color: ink, height: 1.45, fontStyle: FontStyle.italic)),
+                      ]),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(13)),
+                      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        CheckboxListTile(
+                          contentPadding: EdgeInsets.zero,
+                          controlAffinity: ListTileControlAffinity.leading,
+                          value: _pernyataan,
+                          activeColor: forest,
+                          dense: true,
+                          onChanged: (value) => setState(() => _pernyataan = value ?? false),
+                          title: const Text.rich(TextSpan(
+                            style: TextStyle(fontSize: 9, color: ink, height: 1.4),
+                            children: [
+                              TextSpan(text: 'Pernyataan Amanah Peternak: ', style: TextStyle(fontWeight: FontWeight.w900, color: deepForest)),
+                              TextSpan(text: 'Saya menyatakan seluruh hewan qurban yang didaftarkan telah cukup umur/syarat (poel), sehat, bebas cacat fisik (bebas PMK & antraks), serta saya menyetujui prinsip akad amanah muamalah Qurban.'),
+                            ],
+                          )),
                         ),
-                        const SizedBox(width: 6),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(4)),
-                          child: const Text("Omzet Rp 1,2 Miliar (2023)", style: TextStyle(color: Colors.black87, fontSize: 9)),
-                        )
-                      ],
-                    )
-                  ],
+                        const Divider(height: 8),
+                        const Row(children: [
+                          Expanded(child: Text('Baca Dokumen Pedoman Fatwa MUI Kurban', style: TextStyle(fontSize: 8, color: muted, fontWeight: FontWeight.w600))),
+                          Text('Revisi v2.4 (2024)', style: TextStyle(fontSize: 8, color: muted)),
+                        ]),
+                      ]),
+                    ),
+                    const SizedBox(height: 13),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: _submitting ? null : _submitForm,
+                        icon: _submitting
+                            ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                            : const Icon(Icons.how_to_reg_outlined, size: 17),
+                        label: const Text('Daftarkan Toko  →'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFB87900),
+                          foregroundColor: Colors.white,
+                          elevation: 3,
+                          padding: const EdgeInsets.symmetric(vertical: 15),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                          textStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800),
+                        ),
+                      ),
+                    ),
+                  ]),
                 ),
-              )
+              ),
             ],
           ),
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
-            child: const Text(
-              '"Alhamdulillah sejak buka toko di Qurbanan, kami tak lagi pusing memikirkan harga dipermankan tengkulak. Pembayaran cair cepat, sertifikasi dokter olinas sangat transparan, dan kambing domba kami diambil jemaah dan jabodetabek hingga Surabaya."',
-              style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic, color: Colors.black87),
-            ),
-          )
-        ],
+        ),
       ),
     );
+  }
+}
+
+class _HeroFeature extends StatelessWidget {
+  final IconData icon;
+  final String text;
+  const _HeroFeature({required this.icon, required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: (MediaQuery.of(context).size.width - 66) / 2,
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(color: Colors.white.withOpacity(.13), borderRadius: BorderRadius.circular(10)),
+      child: Row(children: [
+        Icon(icon, color: const Color(0xFFD7F2DF), size: 16),
+        const SizedBox(width: 6),
+        Expanded(child: Text(text, style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w700))),
+      ]),
+    );
+  }
+}
+
+class _MapPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final road = Paint()
+      ..color = Colors.white.withOpacity(.9)
+      ..strokeWidth = 5
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+    final minor = Paint()
+      ..color = const Color(0xFFC6D2B9)
+      ..strokeWidth = 2
+      ..style = PaintingStyle.stroke;
+    final route1 = Path()
+      ..moveTo(-5, size.height * .75)
+      ..quadraticBezierTo(size.width * .25, size.height * .45, size.width * .45, size.height * .55)
+      ..quadraticBezierTo(size.width * .7, size.height * .65, size.width + 10, size.height * .2);
+    final route2 = Path()
+      ..moveTo(size.width * .15, -5)
+      ..quadraticBezierTo(size.width * .25, size.height * .35, size.width * .55, size.height * .35)
+      ..quadraticBezierTo(size.width * .75, size.height * .3, size.width * .8, size.height + 5);
+    canvas.drawPath(route1, road);
+    canvas.drawPath(route2, road);
+    canvas.drawLine(Offset(0, size.height * .2), Offset(size.width, size.height * .85), minor);
+    canvas.drawLine(Offset(size.width * .1, size.height), Offset(size.width * .9, 0), minor);
+    final green = Paint()..color = const Color(0xFFD4E5C8);
+    canvas.drawCircle(Offset(size.width * .18, size.height * .25), 17, green);
+    canvas.drawCircle(Offset(size.width * .82, size.height * .72), 22, green);
   }
 
-  Widget _buildPernyataanCard() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8F9FA),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade300),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 4,
-                height: 40,
-                decoration: BoxDecoration(color: Colors.blue, borderRadius: BorderRadius.circular(2)),
-              ),
-              const SizedBox(width: 12),
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text("Pernyataan Amanah Peternak:", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-                    SizedBox(height: 4),
-                    Text("Saya menyatakan seluruh hewan qurban yang didaftarkan telah cukup umur syar'i (poel gigi), sehat, bebas cacat fisik (bebas PMK & Antraks), serta saya menyetujui prinsip akad amanah muamalah Qurbanan.", style: TextStyle(fontSize: 11, color: Colors.black87)),
-                  ],
-                ),
-              )
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text("Baca Dokumen Pedoman Fatwa MUI Kurban", style: TextStyle(fontSize: 10, color: Colors.blue.shade700, fontWeight: FontWeight.bold)),
-              Text("Revisi v2.4 (2024)", style: TextStyle(fontSize: 10, color: Colors.grey.shade600)),
-            ],
-          )
-        ],
-      ),
-    );
-  }
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

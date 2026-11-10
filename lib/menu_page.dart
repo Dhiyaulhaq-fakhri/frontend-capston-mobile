@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend_capston/edukasi_page.dart';
 import 'package:frontend_capston/kalender_page.dart';
+import 'package:frontend_capston/kemitraan_page.dart';
 import 'package:frontend_capston/trendharga_page.dart';
 
 class MenuPage extends StatefulWidget {
@@ -195,6 +196,9 @@ class _MenuPageState extends State<MenuPage> {
                 subtitle: 'Gabung jadi mitra peternak kami',
                 popular: true,
                 longDescription: 'Bergabunglah dalam ekosistem Qurbankan. Daftarkan peternakan Anda, jangkau ribuan pembeli digital, dan tingkatkan penjualan hewan kurban dengan sistem yang transparan.',
+                onButtonPressed: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => const KemitraanPage()));
+                },
               ),
 
               const SizedBox(height: 16),
