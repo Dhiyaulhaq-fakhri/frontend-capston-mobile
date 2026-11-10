@@ -1,5 +1,6 @@
 
 import 'package:flutter/material.dart';
+import 'package:frontend_capston/edukasi_page.dart';
 
 class MenuPage extends StatefulWidget {
   const MenuPage({super.key});
@@ -164,6 +165,10 @@ class _MenuPageState extends State<MenuPage> {
                 subtitle: 'Pahami syarat sah ibadah kurban',
                 popular: false,
                 longDescription: 'Pelajari tata cara, syarat sah hewan, dan hukum pembagian daging kurban sesuai sunnah. Pastikan ibadah Anda sempurna berdasarkan dalil yang sahih.',
+                onButtonPressed: () {
+                //   // Nanti kalau halaman katalog sudah siap, isi di sini
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => const EdukasiPage()));
+                },
               ),
 
               const SizedBox(height: 18),

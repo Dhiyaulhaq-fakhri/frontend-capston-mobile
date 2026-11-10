@@ -49,8 +49,7 @@ class _Order {
     this.badgeText,
     this.badgeIcon,
     this.note,
-    this.image,
-  });
+  }) : image = null;
 }
 
 class PesananPage extends StatefulWidget {
