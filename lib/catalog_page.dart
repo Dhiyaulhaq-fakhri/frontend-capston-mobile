@@ -1,12 +1,25 @@
 import 'package:flutter/material.dart';
 
-class CatalogPage extends StatelessWidget {
+class CatalogPage extends StatefulWidget {
   const CatalogPage({super.key});
 
+  @override
+  State<CatalogPage> createState() => _CatalogPageState();
+}
+
+class _CatalogPageState extends State<CatalogPage> {
   // Warna Utama
   final Color primaryGreen = const Color(0xFF006B3F);
+
   final Color darkGreen = const Color(0xFF0F4C2C);
+
   final Color bgColor = const Color(0xFFF8F9FA);
+
+  int _selectedChipIndex = 0;
+
+    // State untuk Dropdown
+  String _selectedLocation = "Jadobetabek";
+  String _selectedWeight = "Bobot (kg)";
 
   @override
   Widget build(BuildContext context) {
@@ -53,17 +66,17 @@ class CatalogPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // --- FILTER CHIPS (Semua, Kambing, Domba, dll) ---
+             // --- FILTER CHIPS (Semua, Kambing, Domba, dll) ---
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
                 children: [
-                  _buildChip("Semua", true),
-                  _buildChip("Kambing", false),
-                  _buildChip("Domba", false),
-                  _buildChip("Sapi", false),
-                  _buildChip("Kerbau", false),
+                  _buildChip("Semua", 0),
+                  _buildChip("Kambing", 1),
+                  _buildChip("Domba", 2),
+                  _buildChip("Sapi", 3),
+                  _buildChip("Kerbau", 4),
                 ],
               ),
             ),
@@ -126,17 +139,40 @@ class CatalogPage extends StatelessWidget {
             ),
             const SizedBox(height: 16),
 
-            // --- FILTER DROPDOWN (Jadobetabek, Bobot) ---
+                        // --- FILTER DROPDOWN (Jadobetabek, Bobot) ---
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Row(
                 children: [
+                  // Dropdown Lokasi
                   Expanded(
-                    child: _buildDropdown("Jadobetabek", Icons.location_on_outlined),
+                    child: _buildDropdownCustom(
+                      title: "Lokasi", // Label
+                      icon: Icons.location_on_outlined,
+                      value: _selectedLocation,
+                      items: const ["Jadobetabek", "Jawa Barat", "Jawa Tengah", "Jawa Timur"], // List bebas mau berapa aja
+                      onChanged: (newValue) {
+                        setState(() {
+                          _selectedLocation = newValue!;
+                        });
+                      },
+                    ),
                   ),
                   const SizedBox(width: 8),
+                  
+                  // Dropdown Bobot
                   Expanded(
-                    child: _buildDropdown("Bobot (kg)", Icons.scale_outlined),
+                    child: _buildDropdownCustom(
+                      title: "Bobot", // Label
+                      icon: Icons.scale_outlined,
+                      value: _selectedWeight,
+                      items: const ["Bobot (kg)", "< 200 kg", "200 - 400 kg", "> 400 kg"], // List bebas
+                      onChanged: (newValue) {
+                        setState(() {
+                          _selectedWeight = newValue!;
+                        });
+                      },
+                    ),
                   ),
                 ],
               ),
@@ -229,28 +265,46 @@ class CatalogPage extends StatelessWidget {
   }
 
   // --- WIDGET HELPER ---
+    Widget _buildChip(String label, int index) {
+    // Cek apakah index ini yang sedang dipilih
+    final bool isSelected = _selectedChipIndex == index;
 
-  Widget _buildChip(String label, bool isSelected) {
-    return Container(
-      margin: const EdgeInsets.only(right: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: isSelected ? primaryGreen : Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: isSelected ? primaryGreen : Colors.grey.shade300),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          color: isSelected ? Colors.white : Colors.black87,
-          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-          fontSize: 13,
+    return GestureDetector(
+      onTap: () {
+        // Saat diklik, ubah state index yang terpilih
+        setState(() {
+          _selectedChipIndex = index;
+        });
+      },
+      child: Container(
+        margin: const EdgeInsets.only(right: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          // Warnanya berubah sesuai isSelected
+          color: isSelected ? primaryGreen : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: isSelected ? primaryGreen : Colors.grey.shade300),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? Colors.white : Colors.black87,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            fontSize: 13,
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildDropdown(String text, IconData icon) {
+      // --- WIDGET DROPDOWN CUSTOM ---
+  Widget _buildDropdownCustom({
+    required String title, // Label statis (misal "Lokasi")
+    required String value, // Nilai yang terpilih saat ini
+    required IconData icon,
+    required List<String> items,
+    required Function(String?) onChanged,
+  }) {
     return Container(
       height: 40,
       padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -259,16 +313,32 @@ class CatalogPage extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
-            children: [
-              Icon(icon, size: 16, color: primaryGreen),
-              const SizedBox(width: 6),
-              Text(text, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-            ],
+          Icon(icon, size: 16, color: primaryGreen),
+          const SizedBox(width: 6),
+          Expanded(
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                value: value,
+                isExpanded: true,
+                icon: const Icon(Icons.keyboard_arrow_down, size: 16),
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold, 
+                  fontSize: 12, 
+                  color: Colors.black87 // Warna teks
+                ),
+                dropdownColor: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+                items: items.map((String item) {
+                  return DropdownMenuItem<String>(
+                    value: item,
+                    child: Text(item),
+                  );
+                }).toList(),
+                onChanged: onChanged,
+              ),
+            ),
           ),
-          const Icon(Icons.keyboard_arrow_down, size: 16),
         ],
       ),
     );
