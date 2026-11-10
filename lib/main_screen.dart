@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:frontend_capston/home_page.dart'; 
+import 'package:frontend_capston/home_page.dart';
+import 'package:frontend_capston/pesanan_page.dart'; 
 import 'package:frontend_capston/profil_page.dart';
 import 'package:frontend_capston/menu_page.dart';
 
@@ -25,6 +26,7 @@ class _MainScreenState extends State<MainScreen> {
     const Center(child: Text("Halaman Pesanan")), 
     const Center(child: Text("Halaman Akun")), 
     const ProfilPage(),
+    const PesananPage(),
   ];
 
   void _onItemTapped(int index) {
