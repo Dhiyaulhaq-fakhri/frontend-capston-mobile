@@ -1,3 +1,5 @@
+// ignore_for_file: unnecessary_underscores, deprecated_member_use, file_names
+
 import 'package:flutter/material.dart';
 
 /// Halaman Sapi 7 Jiwa — pemesanan/kelompok qurban patungan 7 orang.
