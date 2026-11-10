@@ -1,6 +1,7 @@
 // ignore_for_file: unused_element
 
 import 'package:flutter/material.dart';
+import 'package:frontend_capston/rawat_page.dart';
 import 'package:frontend_capston/tracking_page.dart';
 
 // Status pesanan, dipakai untuk filter chip
@@ -206,14 +207,25 @@ class _PesananPageState extends State<PesananPage> {
   }
 
   // Navigasi sementara ke halaman placeholder.
-  // Ganti dengan halaman detail asli, contoh: DetailPesananPage(trxId: ...)
-  void _openDetail(_Order order) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => TrackingPage(),
-      ),
-    );
+    void _openDetail(_Order order) {
+    // Cek kategori atau status dari pesanan
+    if (order.category.contains("Domba")) {
+      // Jika Domba, arahkan ke halaman Domba
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const RawatTernakPage(), // Ganti dengan class halaman Domba
+        ),
+      );
+    } else {
+      // Jika Sapi / Simental / Lainnya, arahkan ke halaman Sapi
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const TrackingPage(), // Ganti dengan class halaman Sapi
+        ),
+      );
+    }
   }
 
   // --- WIDGET HELPER ---

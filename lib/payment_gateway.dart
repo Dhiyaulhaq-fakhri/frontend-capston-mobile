@@ -4,6 +4,7 @@ import 'dart:async';
 import 'dart:ui' show FontFeature;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:frontend_capston/buktitf_page.dart';
 
 /// Payment gateway demo. Integrasi API/payment gateway dilakukan belakangan.
 class PaymentGatewayPage extends StatefulWidget {
@@ -83,40 +84,67 @@ class _PaymentGatewayPageState extends State<PaymentGatewayPage> {
       ));
   }
 
+    // --- Fungsi Cek Status (Simulasi) ---
   Future<void> _checkStatus() async {
-    if (_checking) return;
     setState(() {
       _checking = true;
-      _checked = false;
     });
-    // Simulasi pemeriksaan status lokal, bukan request ke payment gateway.
-    await Future.delayed(const Duration(milliseconds: 900));
-    if (!mounted) return;
-    setState(() {
-      _checking = false;
-      _checked = true;
-    });
-    await showDialog<void>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        icon: const Icon(Icons.hourglass_top_rounded, color: Color(0xFFB87916), size: 42),
-        title: const Text('Menunggu Pembayaran'),
-        content: const Text(
-          'Belum ada pembayaran yang terdeteksi. Status ini masih simulasi frontend. '
-          'Pengecekan otomatis akan aktif setelah backend dan payment gateway diintegrasikan.',
-          textAlign: TextAlign.center,
-        ),
-        actions: [
-          FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: green),
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Mengerti'),
+
+    // Simulasi loading selama 2 detik
+    await Future.delayed(const Duration(seconds: 2));
+
+    if (mounted) {
+      setState(() {
+        _checking = false;
+        _checked = true; // Menandakan sudah pernah cek
+      });
+
+      // --- 1. TAMPILKAN DIALOG SUKSES DULU ---
+      bool? lanjut = await showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        builder: (dialogContext) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          icon: const Icon(Icons.check_circle, color: Colors.green, size: 50),
+          title: const Text("Pembayaran Berhasil"),
+          content: const Text(
+            "Status transaksi Anda telah dikonfirmasi. Terima kasih telah berqurban!",
+            textAlign: TextAlign.center,
           ),
-        ],
-      ),
-    );
+          actions: [
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: green, // Warna hijau kamu
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+                onPressed: () {
+                  // 2. Tutup dialog dan kirim nilai 'true'
+                  Navigator.pop(dialogContext, true);
+                },
+                child: const Text("Lihat Detail Pesanan", style: TextStyle(color: Colors.white)),
+              ),
+            ),
+          ],
+        ),
+      );
+
+      // --- 3. JIKA USER KLIK TOMBOL, PINDAH HALAMAN ---
+      if (lanjut == true && mounted) {
+        // Hapus semua riwayat halaman sebelumnya agar user tidak bisa 'back' ke pembayaran
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(
+            // GANTI dengan halaman tujuanmu (Sukses / Invoice / Riwayat)
+            builder: (context) => const BuktiTransaksiPage(), 
+          ),
+          (route) => false, 
+        );
+      }
+    }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -523,3 +551,4 @@ class _PaymentGatewayPageState extends State<PaymentGatewayPage> {
         ]),
       );
 }
+

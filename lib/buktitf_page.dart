@@ -4,6 +4,8 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:frontend_capston/main_screen.dart';
+import 'package:frontend_capston/tracking_page.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
@@ -228,19 +230,36 @@ class _BuktiTransaksiPageState extends State<BuktiTransaksiPage> {
     }
   }
 
-  void _track() {
+    void _track() {
+    // Jika ada callback khusus dari pemanggil, gunakan itu (opsional)
     if (widget.onTrackPressed != null) {
       widget.onTrackPressed!.call();
     } else {
-      _message('Hubungkan tombol ini ke halaman Tracking melalui onTrackPressed.');
+      // Jika tidak ada, kita pindah halaman secara langsung
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          // GANTI dengan nama halaman Tracking kamu
+          builder: (context) => const TrackingPage(), 
+        ),
+      );
     }
   }
 
   void _home() {
+    // Jika ada callback khusus, gunakan itu
     if (widget.onHomePressed != null) {
       widget.onHomePressed!.call();
     } else {
-      Navigator.of(context).popUntil((route) => route.isFirst);
+      // Kembali ke halaman paling pertama (Home) dan hapus semua riwayat
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(
+          // GANTI dengan halaman utama/beranda kamu
+          builder: (context) => const MainScreen(), // Atau const HomePage()
+        ),
+        (route) => false, // Hapus semua halaman sebelumnya
+      );
     }
   }
 

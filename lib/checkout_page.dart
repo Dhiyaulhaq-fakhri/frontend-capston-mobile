@@ -1,6 +1,7 @@
 // ignore_for_file: unnecessary_underscores, deprecated_member_use
 
 import 'package:flutter/material.dart';
+import 'package:frontend_capston/payment_gateway.dart';
 
 /// Halaman Checkout Akad & Pengiriman Qurban.
 /// Seluruh interaksi berjalan secara lokal (frontend demo), tanpa backend.
@@ -170,17 +171,18 @@ class _CheckoutQurbanPageState extends State<CheckoutQurbanPage> {
       ),
     );
 
-    if (confirmed == true && mounted) {
+        if (confirmed == true && mounted) {
+      // 1. Tampilkan dialog sukses singkat (Opsional, biar user dapat feedback)
       await showDialog<void>(
         context: context,
+        barrierDismissible: false, // User harus klik tombol
         builder: (dialogContext) => AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
           icon: const Icon(Icons.check_circle, color: green, size: 42),
           title: const Text('Data Checkout Siap'),
           content: const Text(
-            'Data akad dan pilihan pembayaran berhasil divalidasi di aplikasi. '
-            'Integrasi pembuatan invoice dan pembayaran akan ditambahkan '
-            'setelah backend tersedia.',
+            'Data akad dan pilihan pembayaran berhasil divalidasi. '
+            'Anda akan diarahkan ke halaman pembayaran.',
             textAlign: TextAlign.center,
           ),
           actions: [
@@ -192,6 +194,17 @@ class _CheckoutQurbanPageState extends State<CheckoutQurbanPage> {
           ],
         ),
       );
+
+      // 2. Arahkan ke halaman selanjutnya SETELAH dialog ditutup
+      if (mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            // Ganti dengan halaman tujuanmu (misal: PembayaranPage, InvoicePage, atau SuksesPage)
+            builder: (context) => const PaymentGatewayPage(), 
+          ),
+        );
+      }
     }
   }
 
