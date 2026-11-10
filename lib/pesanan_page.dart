@@ -1,4 +1,7 @@
+// ignore_for_file: unused_element
+
 import 'package:flutter/material.dart';
+import 'package:frontend_capston/tracking_page.dart';
 
 // Status pesanan, dipakai untuk filter chip
 enum OrderStatus { berlangsung, selesai, dibatalkan }
@@ -208,7 +211,7 @@ class _PesananPageState extends State<PesananPage> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => _DetailPlaceholderPage(trxId: order.trxId),
+        builder: (context) => TrackingPage(),
       ),
     );
   }

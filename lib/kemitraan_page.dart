@@ -1,3 +1,5 @@
+// ignore_for_file: unnecessary_underscores, deprecated_member_use
+
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
@@ -164,16 +166,13 @@ class _KemitraanPageState extends State<KemitraanPage> {
 
   Future<void> _unggahDokumen(String key) async {
     try {
-      // file_picker v12+ / v13: pickFiles() mengembalikan List<PlatformFile>
-      // secara langsung, bukan FilePickerResult.
       final files = await FilePicker.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],
       );
-      if (files.isEmpty) return; // Pengguna membatalkan pemilihan.
+      if (files.isEmpty) return; 
 
       final file = files.single;
-      // Pada file_picker v12+, properti size diganti dengan length().
       final fileSize = await file.length();
       if (fileSize != null && fileSize > 5 * 1024 * 1024) {
         _toast('Ukuran file maksimal 5 MB.');
@@ -400,7 +399,7 @@ class _KemitraanPageState extends State<KemitraanPage> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
           decoration: BoxDecoration(color: Colors.white.withOpacity(.15), borderRadius: BorderRadius.circular(20)),
-          child: const Text('✿  Mitra Terverifikasi DSN-MUI & SKKH', style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w600)),
+          child: const Text('Mitra Terverifikasi DSN-MUI & SKKH', style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w600)),
         ),
         const SizedBox(height: 6),
         Container(
