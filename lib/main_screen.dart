@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend_capston/catalog_page.dart';
 import 'package:frontend_capston/home_page.dart'; 
 import 'package:frontend_capston/menu_page.dart';
 
@@ -20,7 +21,7 @@ class _MainScreenState extends State<MainScreen> {
   final List<Widget> _pages = [
     const HomePage(), 
     const MenuPage(), 
-    const Center(child: Text("Halaman Katalog")), 
+    const CatalogPage(), 
     const Center(child: Text("Halaman Pesanan")), 
     const Center(child: Text("Halaman Akun")), 
   ];

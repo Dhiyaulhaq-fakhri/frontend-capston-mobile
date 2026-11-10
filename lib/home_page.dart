@@ -100,7 +100,7 @@ class HomePage extends StatelessWidget {
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(16),
                         child: Image.asset(
-                          'resources/Iklan 4.png', // Sesuaikan path
+                          'resources/Iklan 4.jpg', // Sesuaikan path
                           fit: BoxFit.fitWidth, // <-- Kunci utamanya di sini
                         ),
                       ),
