@@ -1,5 +1,6 @@
 
 import 'package:flutter/material.dart';
+import 'package:frontend_capston/checkout_page.dart';
 
 class DetailHewanPage extends StatefulWidget {
   const DetailHewanPage({super.key});
@@ -458,9 +459,7 @@ class _DetailHewanPageState extends State<DetailHewanPage> {
               ),
             ),
             onPressed: () {
-              tampilkanPesan(
-                'Silakan lanjutkan ke proses pemesanan',
-              );
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const CheckoutQurbanPage()));
             },
             child: const Text(
               'Beli Sekarang',

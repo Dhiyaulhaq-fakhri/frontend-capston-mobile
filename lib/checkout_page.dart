@@ -2,6 +2,8 @@
 
 import 'package:flutter/material.dart';
 
+/// Halaman Checkout Akad & Pengiriman Qurban.
+/// Seluruh interaksi berjalan secara lokal (frontend demo), tanpa backend.
 class CheckoutQurbanPage extends StatefulWidget {
   const CheckoutQurbanPage({super.key});
 
@@ -80,31 +82,89 @@ class _CheckoutQurbanPageState extends State<CheckoutQurbanPage> {
     }
 
     final method = _paymentMethod == 0 ? 'BCA Syariah VA' : 'QRIS Instant';
+    final destination = _distribution == 0
+        ? 'Masjid Al-Falah Kebayoran Baru'
+        : 'Wilayah 3T & Dhuafa';
+
+    // Konfirmasi akhir sebelum pengguna melanjutkan ke tahap pembayaran.
     final confirmed = await showDialog<bool>(
       context: context,
+      barrierDismissible: false,
       builder: (dialogContext) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
         title: const Row(
           children: [
-            Icon(Icons.verified_user_outlined, color: green),
+            Icon(Icons.fact_check_outlined, color: green),
             SizedBox(width: 8),
-            Expanded(child: Text('Konfirmasi Akad Qurban')),
+            Expanded(child: Text('Konfirmasi Checkout')),
           ],
         ),
-        content: Text(
-          'Total tagihan ${_rupiah(_total)} dengan metode $method. '
-          'Ini masih simulasi frontend; transaksi belum dikirim ke server '
-          'dan pembayaran belum diproses.',
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Pastikan metode pembayaran dan lokasi sudah sesuai.',
+              style: TextStyle(
+                color: ink,
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(11),
+              decoration: BoxDecoration(
+                color: lavender,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('METODE PEMBAYARAN',
+                      style: TextStyle(color: muted, fontSize: 9, fontWeight: FontWeight.w800)),
+                  const SizedBox(height: 3),
+                  Text(method,
+                      style: const TextStyle(color: green, fontSize: 12, fontWeight: FontWeight.w900)),
+                  const SizedBox(height: 10),
+                  const Text('LOKASI / PENYALURAN',
+                      style: TextStyle(color: muted, fontSize: 9, fontWeight: FontWeight.w800)),
+                  const SizedBox(height: 3),
+                  Text(destination,
+                      style: const TextStyle(color: green, fontSize: 12, fontWeight: FontWeight.w900)),
+                  const SizedBox(height: 10),
+                  const Divider(height: 1),
+                  const SizedBox(height: 9),
+                  Row(
+                    children: [
+                      const Expanded(
+                        child: Text('Total tagihan', style: TextStyle(color: muted, fontSize: 10)),
+                      ),
+                      Text(
+                        _rupiah(_total),
+                        style: const TextStyle(color: green, fontSize: 14, fontWeight: FontWeight.w900),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Periksa Lagi'),
+            child: const Text('Kembali', style: TextStyle(color: muted, fontWeight: FontWeight.w700)),
           ),
           FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: green),
+            style: FilledButton.styleFrom(
+              backgroundColor: green,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9)),
+            ),
             onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('Lanjutkan'),
+            child: const Text('Lanjut'),
           ),
         ],
       ),

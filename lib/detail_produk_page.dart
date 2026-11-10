@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend_capston/chat_page.dart';
+import 'package:frontend_capston/checkout_page.dart';
 import 'package:frontend_capston/kandang_page.dart';
 // import 'kandang_page.dart'; // Nanti jika halaman kandang sudah ada
 // import 'chat_page.dart';    // Nanti jika halaman chat sudah ada
@@ -50,9 +51,7 @@ class DetailProdukPage extends StatelessWidget {
             child: ElevatedButton(
               onPressed: () {
                 // Aksi Beli Sekarang
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Lanjut ke halaman pembayaran...")),
-                );
+                Navigator.push(context, MaterialPageRoute(builder: (context) => const CheckoutQurbanPage()));
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFB8860B), // Warna Emas/Cokelat

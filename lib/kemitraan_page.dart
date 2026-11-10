@@ -517,7 +517,6 @@ class _KemitraanPageState extends State<KemitraanPage> {
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             itemCount: _fotoKandang.length,
-            // ignore: unnecessary_underscores
             separatorBuilder: (_, __) => const SizedBox(width: 7),
             itemBuilder: (context, index) => Stack(children: [
               ClipRRect(
