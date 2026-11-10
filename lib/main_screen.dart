@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend_capston/home_page.dart'; 
-<<<<<<< HEAD
 import 'package:frontend_capston/profil_page.dart';
-=======
 import 'package:frontend_capston/menu_page.dart';
->>>>>>> 2629b594b088114c62655707845a774a390ea5e7
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -27,7 +24,7 @@ class _MainScreenState extends State<MainScreen> {
     const Center(child: Text("Halaman Katalog")), 
     const Center(child: Text("Halaman Pesanan")), 
     const Center(child: Text("Halaman Akun")), 
-    const Center(child: Text("Halaman Profil")),
+    const ProfilPage(),
   ];
 
   void _onItemTapped(int index) {
