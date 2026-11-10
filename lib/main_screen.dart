@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend_capston/home_page.dart'; 
+import 'package:frontend_capston/profil_page.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -22,6 +23,7 @@ class _MainScreenState extends State<MainScreen> {
     const Center(child: Text("Halaman Katalog")), 
     const Center(child: Text("Halaman Pesanan")), 
     const Center(child: Text("Halaman Akun")), 
+    const Center(child: Text("Halaman Profil")),
   ];
 
   void _onItemTapped(int index) {
@@ -61,6 +63,7 @@ class _MainScreenState extends State<MainScreen> {
                 _buildNavItem(Icons.grid_view, "Katalog", 2),
                 _buildNavItem(Icons.receipt_long, "Pesanan", 3),
                 _buildNavItem(Icons.person_outline, "Akun", 4),
+                _buildNavItem(Icons.person, "Profil", 5),
               ],
             ),
           ),
