@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend_capston/home_page.dart'; 
+import 'package:frontend_capston/menu_page.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -18,7 +19,7 @@ class _MainScreenState extends State<MainScreen> {
 
   final List<Widget> _pages = [
     const HomePage(), 
-    const Center(child: Text("Halaman Menu")), 
+    const MenuPage(), 
     const Center(child: Text("Halaman Katalog")), 
     const Center(child: Text("Halaman Pesanan")), 
     const Center(child: Text("Halaman Akun")), 
