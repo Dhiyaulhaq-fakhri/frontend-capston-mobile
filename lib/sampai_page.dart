@@ -37,7 +37,7 @@ class _ScanSampaiPageState extends State<ScanSampaiPage> {
   static const Color muted = Color(0xFF748078);
   static const Color paleGreen = Color(0xFFE0F0E7);
   static const String expectedTag = '#SP-8821-JGG';
-  static const String expectedOrder = 'Qurbankan';
+  static const String expectedOrder = 'QU-RBAN-KAN';
 
   late final MobileScannerController _scannerController;
   final ImagePicker _imagePicker = ImagePicker();
