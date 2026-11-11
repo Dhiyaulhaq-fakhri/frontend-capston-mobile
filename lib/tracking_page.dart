@@ -1,7 +1,8 @@
-// ignore_for_file: unnecessary_underscores, deprecated_member_use
+// ignore_for_file: prefer_final_fields, unnecessary_underscores, deprecated_member_use
 
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:frontend_capston/sampai_page.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -160,37 +161,44 @@ class _TrackingPageState extends State<TrackingPage> {
   }
 
   Future<void> _confirmReceipt() async {
-    if (_receiptConfirmed) {
-      _message('Penerimaan hewan sudah dikonfirmasi.');
-      return;
-    }
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Konfirmasi Penerimaan Hewan'),
+  final bool? lanjut = await showDialog<bool>(
+    context: context,
+    builder: (dialogContext) {
+      return AlertDialog(
+        title: const Text('Konfirmasi Pesanan'),
         content: const Text(
-          'Apakah hewan qurban sudah diterima dalam kondisi baik di lokasi tujuan? '
-          'Setelah dikonfirmasi, status pengiriman akan berubah menjadi selesai.',
+          'Pastikan metode pembayaran dan lokasi '
+          'sudah sesuai sebelum mengonfirmasi pesanan.',
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Belum'),
+            onPressed: () {
+              Navigator.pop(dialogContext, false);
+            },
+            child: const Text('Kembali'),
           ),
-          FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: green),
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Ya, sudah diterima'),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(dialogContext, true);
+            },
+            child: const Text('Lanjut'),
           ),
         ],
+      );
+    },
+  );
+
+  if (!mounted) return;
+
+  if (lanjut == true) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const ScanSampaiPage(),
       ),
     );
-
-    if (confirm == true && mounted) {
-      setState(() => _receiptConfirmed = true);
-      _message('Penerimaan hewan berhasil dikonfirmasi.');
-    }
   }
+}
 
   @override
   Widget build(BuildContext context) {
